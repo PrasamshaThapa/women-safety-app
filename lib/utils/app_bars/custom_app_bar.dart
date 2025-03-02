@@ -27,7 +27,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.iosStatusBarBrightness,
     this.height = kToolbarHeight,
     this.textStyle = TextStyles.bold18,
-    this.backgroundColor = AppColors.primary,
+    this.backgroundColor = AppColors.background,
   });
 
   @override

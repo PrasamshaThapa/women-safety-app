@@ -5,6 +5,7 @@ import '../constants/app_spaces.dart';
 import '../utils/buttons/expanded_filled_button.dart';
 import '../utils/gesture/custom_inkwell.dart';
 import '../utils/inputs/custom_input.dart';
+import 'home/home_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -60,7 +61,16 @@ class LoginScreen extends StatelessWidget {
                       isPassword: true,
                     ),
                     AppSpaces.small,
-                    ExpandedFilledButton(title: "Login", onTap: () {}),
+                    ExpandedFilledButton(
+                      title: "Login",
+                      onTap: () {
+                        //TODO
+
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                        );
+                      },
+                    ),
                     Text(
                       'Or sign up with',
                       style: TextStyle(color: Colors.purple.shade700),
