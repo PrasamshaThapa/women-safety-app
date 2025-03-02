@@ -4,6 +4,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ant_design.dart';
 import 'package:iconify_flutter/icons/bi.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
@@ -13,6 +14,7 @@ import '../../utils/card/custom_card.dart';
 import '../../utils/gesture/custom_inkwell.dart';
 import '../contact_management_screen.dart';
 import '../helpline_numbers_screen.dart';
+import '../map/initial_map_screen.dart';
 import '../safety_tips_screen.dart';
 import 'drawer.dart';
 
@@ -101,7 +103,29 @@ class HomeScreen extends StatelessWidget {
                       _buildFeatureCard(
                         icon: Iconify(Logos.google_maps, size: 40),
                         title: 'Maps',
-                        onTap: () {},
+                        onTap: () async {
+                          PermissionStatus status =
+                              await Permission.location.request();
+
+                          if (status.isGranted) {
+                            // Navigate to MapPage after permission is granted
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => InitialMapScreen(),
+                              ),
+                            );
+                          } else {
+                            // Show an alert if permission is denied
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Location permission is required to proceed.",
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                       _buildFeatureCard(
                         icon: Iconify(

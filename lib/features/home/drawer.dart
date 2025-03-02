@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/buttons/expanded_filled_button.dart';
 import 'about_us_screen.dart';
+import 'incident_report_screen.dart';
 
 class DrawerSection extends StatelessWidget {
   const DrawerSection({super.key});
@@ -59,7 +60,11 @@ class DrawerSection extends StatelessWidget {
                 leading: const Icon(Icons.warning, color: AppColors.secondary),
                 title: const Text('Incident Report'),
                 onTap: () {
-                  // Handle Incident Report navigation
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => IncidentReportScreen(),
+                    ),
+                  );
                 },
               ),
 
