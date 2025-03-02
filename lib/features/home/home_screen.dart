@@ -11,6 +11,7 @@ import '../../constants/app_spaces.dart';
 import '../../constants/text_styles.dart';
 import '../../utils/card/custom_card.dart';
 import '../../utils/gesture/custom_inkwell.dart';
+import '../contact_management_screen.dart';
 import '../helpline_numbers_screen.dart';
 import '../safety_tips_screen.dart';
 import 'drawer.dart';
@@ -90,7 +91,12 @@ class HomeScreen extends StatelessWidget {
                           color: AppColors.secondary,
                         ),
                         title: 'Trusted Contacts Management',
-                        onTap: () {},
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ContactManagementScreen(),
+                              ),
+                            ),
                       ),
                       _buildFeatureCard(
                         icon: Iconify(Logos.google_maps, size: 40),
