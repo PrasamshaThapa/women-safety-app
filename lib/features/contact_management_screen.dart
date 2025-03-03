@@ -38,7 +38,16 @@ class _ContactManagementScreenState extends State<ContactManagementScreen> {
     });
 
     try {
+      // Check permission status first
+      bool permission = await FlutterContacts.requestPermission();
+
+      // Update permission state
+      setState(() {
+        _hasPermission = permission;
+      });
+
       if (_hasPermission) {
+        // If we have permission, get the contacts
         List<Contact> contacts = await FlutterContacts.getContacts(
           withProperties: true,
           withPhoto: false,
@@ -47,19 +56,10 @@ class _ContactManagementScreenState extends State<ContactManagementScreen> {
           _deviceContacts = contacts;
         });
       } else {
-        bool permission = await FlutterContacts.requestPermission();
-        setState(() {
-          _hasPermission = permission;
-        });
-
-        if (!permission) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Contact permission denied")),
-          );
-        } else {
-          // Try to get contacts again if permission was just granted
-          await _getDeviceContacts();
-        }
+        // Only show the snackbar if permission is actually denied
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Contact permission denied")),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
