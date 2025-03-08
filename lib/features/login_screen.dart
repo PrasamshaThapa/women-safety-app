@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/auth/auth_bloc.dart';
+import '../bloc/auth/auth_event.dart';
 import '../constants/app_constants.dart';
 import '../constants/app_spaces.dart';
 import '../utils/buttons/expanded_filled_button.dart';
@@ -7,8 +11,27 @@ import '../utils/gesture/custom_inkwell.dart';
 import '../utils/inputs/custom_input.dart';
 import 'home/home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _auth.authStateChanges().listen((event) {
+      setState(() {
+        _user = event;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +99,7 @@ class LoginScreen extends StatelessWidget {
                       style: TextStyle(color: Colors.purple.shade700),
                     ),
                     CustomInkWell(
-                      onTap: () {},
+                      onTap: _handleGoogleSignUp,
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: const BoxDecoration(
@@ -104,5 +127,23 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleGoogleSignUp() async {
+    try {
+      final GoogleAuthProvider googleAuthProvider = GoogleAuthProvider();
+      final UserCredential userCredential = await _auth.signInWithProvider(
+        googleAuthProvider,
+      );
+
+      if (userCredential.user != null) {
+        context.read<AuthBloc>().add(AuthUserChanged(userCredential.user));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
+    } catch (e) {
+      print("LOGIN ERROR: $e");
+    }
   }
 }

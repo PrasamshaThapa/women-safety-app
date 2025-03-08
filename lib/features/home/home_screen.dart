@@ -1,11 +1,16 @@
+import 'dart:developer';
+
 import 'package:colorful_iconify_flutter/icons/logos.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ant_design.dart';
 import 'package:iconify_flutter/icons/bi.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/auth/auth_state.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/app_spaces.dart';
@@ -64,19 +69,31 @@ class HomeScreen extends StatelessWidget {
                       ),
                 ),
 
-                // User Card
-                CustomCard(
-                  child: const ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.secondary,
-                      child: Icon(Icons.person),
-                    ),
-                    title: Text('Prasamsha Thapa', style: TextStyles.medium18),
-                    subtitle: Text(
-                      '+977 9840777666',
-                      style: TextStyles.medium14,
-                    ),
-                  ),
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final user = state.user;
+
+                    log(">>>>>>>>>>>>>>>>>>>>>>>$user");
+                    return CustomCard(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.secondary,
+                          child:
+                              user?.photoURL != ""
+                                  ? Image.network(user?.photoURL ?? '')
+                                  : Icon(Icons.person),
+                        ),
+                        title: Text(
+                          user?.displayName ?? 'Unknown',
+                          style: TextStyles.medium18,
+                        ),
+                        subtitle: Text(
+                          user?.phoneNumber ?? user?.email ?? "",
+                          style: TextStyles.medium14,
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 Expanded(
