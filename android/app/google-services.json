@@ -12,7 +12,12 @@
           "package_name": "com.example.women_safety_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "189485602796-sd3f9dp40lkai9rl21ftntp7r24ro6dg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA3YmkEgVRoTa0DcyhI_gdga5Tx46011uc"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "189485602796-sd3f9dp40lkai9rl21ftntp7r24ro6dg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "189485602796-u4paljidou6l2fd697tm18i7nv57rvuj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.womenSafetyApp"
+              }
+            }
+          ]
         }
       }
     }
