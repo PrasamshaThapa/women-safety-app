@@ -1,6 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 
+import '../bloc/auth/auth_bloc.dart';
+import '../bloc/auth/auth_state.dart';
 import '../constants/app_colors.dart';
 import '../utils/app_bars/custom_app_bar.dart';
 import '../utils/nav_bar/custom_nav_bar.dart';
@@ -16,20 +21,121 @@ class ContactManagementScreen extends StatefulWidget {
 class _ContactManagementScreenState extends State<ContactManagementScreen> {
   final List<Contact> _selectedContacts = [];
   List<Contact> _deviceContacts = [];
+  List<Map<String, dynamic>> _firebaseContacts = [];
   bool _isLoading = false;
   bool _hasPermission = false;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
     _checkPermissions();
+    _fetchContactsFromFirebase();
   }
+
+  // Get the current user ID
+  String? get _userId => _auth.currentUser?.uid;
+
+  // Get reference to user's contacts collection
+  CollectionReference get _userContactsRef =>
+      _firestore.collection('users').doc(_userId).collection('contacts');
 
   Future<void> _checkPermissions() async {
     bool permission = await FlutterContacts.requestPermission();
     setState(() {
       _hasPermission = permission;
     });
+  }
+
+  // Fetch contacts from Firebase
+  Future<void> _fetchContactsFromFirebase() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (_userId != null) {
+        QuerySnapshot snapshot = await _userContactsRef.get();
+
+        setState(() {
+          _firebaseContacts =
+              snapshot.docs
+                  .map(
+                    (doc) => {
+                      'id': doc.id,
+                      'name': doc['name'],
+                      'phone': doc['phone'],
+                    },
+                  )
+                  .toList();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to fetch contacts: ${e.toString()}")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Save contact to Firebase
+  Future<void> _saveContactToFirebase(Contact contact) async {
+    try {
+      if (_userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("You need to be logged in to save contacts"),
+          ),
+        );
+        return;
+      }
+
+      String name = contact.displayName;
+      String phone =
+          contact.phones.isNotEmpty
+              ? contact.phones.first.number
+              : 'No phone number';
+
+      // Check if contact already exists
+      QuerySnapshot existing =
+          await _userContactsRef
+              .where('phone', isEqualTo: phone)
+              .limit(1)
+              .get();
+
+      if (existing.docs.isEmpty) {
+        // Add new contact
+        await _userContactsRef.add({
+          'name': name,
+          'phone': phone,
+          'contactId': contact.id,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Refresh the contacts list
+        _fetchContactsFromFirebase();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save contact: ${e.toString()}")),
+      );
+    }
+  }
+
+  // Delete contact from Firebase
+  Future<void> _deleteContactFromFirebase(String docId) async {
+    try {
+      await _userContactsRef.doc(docId).delete();
+      _fetchContactsFromFirebase();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete contact: ${e.toString()}")),
+      );
+    }
   }
 
   Future<void> _getDeviceContacts() async {
@@ -72,12 +178,16 @@ class _ContactManagementScreenState extends State<ContactManagementScreen> {
     }
   }
 
-  void _addContact(Contact contact) {
+  void _addContact(Contact contact) async {
+    // Add to selected contacts for UI updates
     setState(() {
       if (!_selectedContacts.any((c) => c.id == contact.id)) {
         _selectedContacts.add(contact);
       }
     });
+
+    // Save to Firebase
+    await _saveContactToFirebase(contact);
   }
 
   void _removeContact(Contact contact) {
@@ -145,66 +255,54 @@ class _ContactManagementScreenState extends State<ContactManagementScreen> {
         child: Column(
           children: [
             // Add New Contact Button
-            GestureDetector(
-              onTap: _showContactSelectionDialog,
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primary, // Darker Purple
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.add, color: Colors.white, size: 32),
-                    SizedBox(width: 16),
-                    Text(
-                      "Add new\nPrasamsha's contacts",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
+            BlocSelector<AuthBloc, AuthState, User?>(
+              selector: (state) => state.user,
+              builder:
+                  (context, state) => GestureDetector(
+                    onTap: _showContactSelectionDialog,
+                    child: Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary, // Darker Purple
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.add, color: Colors.white, size: 32),
+                          SizedBox(width: 16),
+                          Text(
+                            "Add new\n${state?.email}'s contacts",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
             ),
 
             // Loading indicator for initial contacts load
             if (_isLoading) const Center(child: CircularProgressIndicator()),
 
-            // Selected Contacts List
+            // Firebase Contacts List
             Column(
               children: [
-                ..._selectedContacts.map((contact) {
-                  String name = contact.displayName;
-                  String phone =
-                      contact.phones.isNotEmpty
-                          ? contact.phones.first.number
-                          : 'No phone number';
-
+                ..._firebaseContacts.map((contact) {
                   return ContactItem(
-                    name: name,
-                    phone: phone,
-                    onDelete: () => _removeContact(contact),
+                    name: contact['name'],
+                    phone: contact['phone'],
+                    onDelete: () => _deleteContactFromFirebase(contact['id']),
                   );
                 }),
 
-                // Show some static contacts if no contacts are selected
-                if (_selectedContacts.isEmpty) ...[
-                  const ContactItem(
-                    name: "Mom",
-                    phone: "+977 9841414141",
-                    onDelete: null,
-                  ),
-                  const ContactItem(
-                    name: "Dad",
-                    phone: "+977 9841414141",
-                    onDelete: null,
-                  ),
-                  const ContactItem(
-                    name: "Louis",
-                    phone: "+977 9841414141",
-                    onDelete: null,
-                  ),
-                ],
+                // Show some static contacts if no contacts are added yet
+                // if (_firebaseContacts.isEmpty && !_isLoading) ...[
+                //   const ContactItem(
+                //     name: "Add contacts",
+                //     phone: "Tap the button above to add contacts",
+                //     onDelete: null,
+                //   ),
+                // ],
               ],
             ),
           ],

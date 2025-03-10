@@ -148,22 +148,25 @@ class _LoginScreenState extends State<LoginScreen> {
         final FirebaseFirestore db = FirebaseFirestore.instance;
         final CollectionReference users = db.collection('users');
 
-        // Check if the email exists in the database
-        final QuerySnapshot query =
-            await users.where('email', isEqualTo: email).limit(1).get();
+        // Check if the user document exists
+        final DocumentSnapshot userDoc = await users.doc(user.uid).get();
 
-        // If email doesn't exist, add it to the database
-        if (query.docs.isEmpty) {
-          // Create user document with the email
-          await users.add({
+        // If user doesn't exist, create a new document
+        if (!userDoc.exists) {
+          // Create user document with the user's UID as the document ID
+          await users.doc(user.uid).set({
             'email': email,
-            'createdAt': FieldValue.serverTimestamp(),
-            // Add any other user info you want to store
             'displayName': user.displayName,
             'photoURL': user.photoURL,
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastLogin': FieldValue.serverTimestamp(),
           });
           log('User added to database: $email');
         } else {
+          // Update last login time
+          await users.doc(user.uid).update({
+            'lastLogin': FieldValue.serverTimestamp(),
+          });
           log('User already exists in database: $email');
         }
 
@@ -175,6 +178,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       print("LOGIN ERROR: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Login failed: ${e.toString()}")));
     }
   }
 }
