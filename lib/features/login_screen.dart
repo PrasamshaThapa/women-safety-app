@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,8 +139,36 @@ class _LoginScreenState extends State<LoginScreen> {
         googleAuthProvider,
       );
 
+      // Check if we got a user
       if (userCredential.user != null) {
-        context.read<AuthBloc>().add(AuthUserChanged(userCredential.user));
+        final User user = userCredential.user!;
+        final String email = user.email!;
+
+        // Reference to Firestore
+        final FirebaseFirestore db = FirebaseFirestore.instance;
+        final CollectionReference users = db.collection('users');
+
+        // Check if the email exists in the database
+        final QuerySnapshot query =
+            await users.where('email', isEqualTo: email).limit(1).get();
+
+        // If email doesn't exist, add it to the database
+        if (query.docs.isEmpty) {
+          // Create user document with the email
+          await users.add({
+            'email': email,
+            'createdAt': FieldValue.serverTimestamp(),
+            // Add any other user info you want to store
+            'displayName': user.displayName,
+            'photoURL': user.photoURL,
+          });
+          log('User added to database: $email');
+        } else {
+          log('User already exists in database: $email');
+        }
+
+        // Update the auth state and navigate to home screen
+        context.read<AuthBloc>().add(AuthUserChanged(user));
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );

@@ -28,11 +28,7 @@ class DrawerSection extends StatelessWidget {
                     radius: 60,
                     backgroundImage: AssetImage(user?.photoURL ?? ''),
                     backgroundColor: AppColors.background,
-                    // child: Icon(
-                    //   Icons.person,
-                    //   size: AppConstants.largeAvatarSize,
-                    //   color: AppColors.secondary,
-                    // ),
+
                     child:
                         user?.photoURL != ""
                             ? Image.network(
