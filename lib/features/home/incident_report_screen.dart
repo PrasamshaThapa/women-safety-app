@@ -14,7 +14,7 @@ import '../../utils/buttons/expanded_filled_button.dart';
 import '../../utils/inputs/custom_date_input.dart';
 import '../../utils/inputs/custom_input.dart';
 import '../../utils/inputs/custom_multiline_input.dart';
-import '../map/map_screen.dart';
+import '../map/main_map.dart';
 import 'map_dialog.dart';
 
 class IncidentReportScreen extends StatefulWidget {
@@ -127,9 +127,10 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (context) => MapPage(
-                                    locationAddress: locationInput,
-                                    locationName: _locationController.text,
+                                  (context) => MainMapScreen(
+                                    incidentLocation: locationInput,
+                                    incidentLocationName:
+                                        _locationController.text,
                                   ),
                             ),
                           );

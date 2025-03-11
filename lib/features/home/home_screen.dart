@@ -19,7 +19,7 @@ import '../../utils/card/custom_card.dart';
 import '../../utils/gesture/custom_inkwell.dart';
 import '../contact_management_screen.dart';
 import '../helpline_numbers_screen.dart';
-import '../map/map_route_screen.dart';
+import '../map/main_map.dart';
 import '../safety_tips_screen.dart';
 import 'drawer.dart';
 
@@ -132,7 +132,7 @@ class HomeScreen extends StatelessWidget {
                               //   builder: (context) => InitialMapScreen(),
                               // ),
                               MaterialPageRoute(
-                                builder: (context) => MapRouteScreen(),
+                                builder: (context) => MainMapScreen(),
                               ),
                             );
                           } else {
