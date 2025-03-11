@@ -2,15 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../constants/app_colors.dart';
 
 class MapPage extends StatefulWidget {
-  final String locationAddress;
-
-  const MapPage({super.key, required this.locationAddress});
+  final List<double> locationAddress;
+  final String locationName;
+  const MapPage({
+    super.key,
+    required this.locationAddress,
+    required this.locationName,
+  });
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -30,19 +33,13 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _getCoordinates() async {
     try {
-      // Convert address into coordinates
-      List<Location> locations = await locationFromAddress(
-        widget.locationAddress,
-      );
+      final locations = widget.locationAddress;
 
       if (locations.isNotEmpty) {
-        final firstLocation = locations.first;
+        // final firstLocation = locations.first;
 
         setState(() {
-          _locationLatLng = LatLng(
-            firstLocation.latitude,
-            firstLocation.longitude,
-          );
+          _locationLatLng = LatLng(locations[0], locations[1]);
 
           _markers = [
             Marker(
@@ -147,7 +144,7 @@ class _MapPageState extends State<MapPage> {
                   ],
                 ),
                 child: Text(
-                  widget.locationAddress,
+                  widget.locationName,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,

@@ -2,7 +2,9 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../bloc/auth/auth_bloc.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/app_spaces.dart';
@@ -34,6 +36,13 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
   final _incidentDescriptionController = TextEditingController();
 
   @override
+  void initState() {
+    _reportedByController.text =
+        context.read<AuthBloc>().state.user?.email ?? '';
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,21 +69,12 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                           CustomInput(
                             controller: _reportedByController,
                             label: "Reported By",
+                            readOnly: true,
                           ),
                           CustomInput(
                             controller: _locationController,
                             label: "Location",
                           ),
-                          CustomDateInput(
-                            controller: _dateOfReportController,
-                            label: "Date Of Report",
-                          ),
-                          CustomDateInput(
-                            controller: _incidentDateController,
-                            showPastAndHideFuture: false,
-                            label: "Incident Date",
-                          ),
-
                           CustomOutlinedButton(
                             onTap:
                                 () => showKycMapDialog(
@@ -84,8 +84,17 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                                   },
                                 ),
                             // icon: Icon(Icons.map),
-                            title: "Click to Setup",
+                            title: "Locate in Map",
                             radius: AppConstants.borderRadius,
+                          ),
+                          CustomDateInput(
+                            controller: _dateOfReportController,
+                            label: "Date Of Report",
+                          ),
+                          CustomDateInput(
+                            controller: _incidentDateController,
+                            showPastAndHideFuture: false,
+                            label: "Incident Date",
                           ),
                         ],
                       ),
@@ -112,14 +121,16 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                           _specificAreaController![1],
                           _incidentDescriptionController.text,
                         );
-                        String locationInput = _locationController.text;
-                        if (locationInput.isNotEmpty) {
+                        final locationInput = _specificAreaController;
+                        if (locationInput != null) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (context) =>
-                                      MapPage(locationAddress: locationInput),
+                                  (context) => MapPage(
+                                    locationAddress: locationInput,
+                                    locationName: _locationController.text,
+                                  ),
                             ),
                           );
                         }
@@ -132,8 +143,8 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
             ),
           ),
         ),
+        // bottomNavigationBar: CustomNavBar(),
       ),
-      // bottomNavigationBar: CustomNavBar(),
     );
   }
 

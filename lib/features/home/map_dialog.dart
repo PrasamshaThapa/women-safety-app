@@ -31,6 +31,12 @@ class _MapDialogState extends State<MapDialog> {
   bool isCameraMoved = false;
   late List<double> googlePinLocation = [];
 
+  @override
+  initState() {
+    super.initState();
+    _getUserLocation();
+  }
+
   Future<void> _getUserLocation() async {
     PermissionHelper.checkLocationPermission(
       context,
@@ -49,7 +55,7 @@ class _MapDialogState extends State<MapDialog> {
               width: 80.0,
               height: 80.0,
               point: _currentPosition!,
-              child: Icon(Icons.location_on, color: Colors.red, size: 40.0),
+              child: Icon(Icons.location_on, color: Colors.blue, size: 40.0),
             ),
           ];
         });
@@ -71,7 +77,8 @@ class _MapDialogState extends State<MapDialog> {
     }
   }
 
-  void _onCameraIdle() {
+  void _onCameraTap() {
+    log("message");
     if (_currentPosition != null) {
       setState(() {
         isCameraMoved = false;
@@ -135,6 +142,8 @@ class _MapDialogState extends State<MapDialog> {
                         onMapReady: () {
                           _onMapCreated(_mapController);
                         },
+                        onPositionChanged:
+                            (camera, hasGesture) => _onCameraTap(),
                       ),
                       children: [
                         TileLayer(
