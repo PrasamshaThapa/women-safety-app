@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -169,9 +167,6 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
       builder:
           (context) => MapDialog(
             onDone: (googlePinLocation) {
-              log(
-                ">>>>>>>>>>>>>>>>>>>>>>>>>> showKycMapDialog ${googlePinLocation.first} ${googlePinLocation.last}",
-              );
               onDone!(googlePinLocation);
             },
           ),

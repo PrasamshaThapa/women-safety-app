@@ -1,6 +1,7 @@
 // main_map_screen.dart
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:latlong2/latlong.dart';
@@ -33,6 +34,8 @@ class _MainMapScreenState extends State<MainMapScreen> {
   final RouteService _routeService = RouteService();
   final ContactService _contactService = ContactService();
   final SMSService _smsService = SMSService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> _firebaseUnsafeAreas = [];
 
   LatLng? _currentPosition;
   LatLng? _incidentPosition;
@@ -44,6 +47,10 @@ class _MainMapScreenState extends State<MainMapScreen> {
   bool _routeMode = false;
   String? _locationName;
   bool _isLoading = true;
+
+  // Get reference to user's contacts collection
+  CollectionReference get unsafeAreaRef =>
+      _firestore.collection('unsafe_areas');
 
   @override
   void initState() {
@@ -66,7 +73,7 @@ class _MainMapScreenState extends State<MainMapScreen> {
         widget.incidentLocation![1],
       );
       _locationName = widget.incidentLocationName;
-      _startPoint = _incidentPosition;
+      //_startPoint = _incidentPosition;
     }
 
     // Get current location regardless of incident location
@@ -160,18 +167,66 @@ class _MainMapScreenState extends State<MainMapScreen> {
     });
   }
 
+  // Future<void> _calculateRoute() async {
+  //   if (_startPoint == null || _endPoint == null) return;
+
+  //   try {
+  //     setState(() => _isLoading = true);
+  //     final route = await _routeService.getRoute(_startPoint!, _endPoint!);
+  //     setState(() => _routePoints = route);
+  //   } catch (e) {
+  //     _showError('Failed to calculate route: $e');
+  //   } finally {
+  //     setState(() => _isLoading = false);
+  //   }
+  // }
+
   Future<void> _calculateRoute() async {
     if (_startPoint == null || _endPoint == null) return;
 
     try {
       setState(() => _isLoading = true);
-      final route = await _routeService.getRoute(_startPoint!, _endPoint!);
+      await _fetchUnsafeAreas();
+
+      List<LatLng> route;
+      if (_firebaseUnsafeAreas.isNotEmpty) {
+        // Use route that avoids unsafe areas
+
+        route = await _routeService.getRouteSafely(
+          _startPoint!,
+          _endPoint!,
+          _firebaseUnsafeAreas,
+        );
+      } else {
+        // Use direct route if no unsafe areas
+
+        route = await _routeService.getRoute(_startPoint!, _endPoint!);
+      }
+
       setState(() => _routePoints = route);
     } catch (e) {
       _showError('Failed to calculate route: $e');
+
+      // Fallback to direct route if avoiding unsafe areas fails
+      try {
+        final directRoute = await _routeService.getRoute(
+          _startPoint!,
+          _endPoint!,
+        );
+        setState(() => _routePoints = directRoute);
+        _showWarning('Using direct route which may pass through unsafe areas');
+      } catch (e) {
+        _showError('Failed to calculate any route: $e');
+      }
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showWarning(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.orange),
+    );
   }
 
   void _shareLocation(Contact contact) async {
@@ -195,6 +250,40 @@ class _MainMapScreenState extends State<MainMapScreen> {
 
     // Hide contacts panel after sharing
     setState(() => _showContactsPanel = false);
+  }
+
+  // Fetch unsafeAreas from Firebase
+  Future<void> _fetchUnsafeAreas() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      QuerySnapshot snapshot = await unsafeAreaRef.get();
+
+      setState(() {
+        _firebaseUnsafeAreas =
+            snapshot.docs
+                .map(
+                  (doc) => {
+                    'id': doc.id,
+                    'description': doc['description'],
+                    'latitude': doc['latitude'],
+                    'longitude': doc['longitude'],
+                    'name': doc['name'],
+                  },
+                )
+                .toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to fetch unsafeArea: ${e.toString()}")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override

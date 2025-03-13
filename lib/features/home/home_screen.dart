@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:colorful_iconify_flutter/icons/logos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -73,7 +71,6 @@ class HomeScreen extends StatelessWidget {
                   builder: (context, state) {
                     final user = state.user;
 
-                    log(">>>>>>>>>>>>>>>>>>>>>>>$user");
                     return CustomCard(
                       child: ListTile(
                         leading: CircleAvatar(
