@@ -1,4 +1,6 @@
 // main_map_screen.dart
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:latlong2/latlong.dart';
@@ -53,6 +55,8 @@ class _MainMapScreenState extends State<MainMapScreen> {
     setState(() => _isLoading = true);
 
     await _requestPermissions();
+
+    log("LOCATION: ${widget.incidentLocation}");
 
     // Set incident location if provided
     if (widget.incidentLocation != null &&

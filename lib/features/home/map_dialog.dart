@@ -26,6 +26,7 @@ class MapDialog extends StatefulWidget {
 class _MapDialogState extends State<MapDialog> {
   final MapController _mapController = MapController();
   LatLng? _currentPosition;
+  LatLng? _selectedPosition; // New variable to track the selected position
   List<Marker> _markers = [];
   bool _isMapInitialized = false;
   bool isCameraMoved = false;
@@ -50,6 +51,7 @@ class _MapDialogState extends State<MapDialog> {
             userLocation.latitude,
             userLocation.longitude,
           );
+          _selectedPosition = _currentPosition; // Initialize selected position
           _markers = [
             Marker(
               width: 80.0,
@@ -58,7 +60,14 @@ class _MapDialogState extends State<MapDialog> {
               child: Icon(Icons.location_on, color: Colors.blue, size: 40.0),
             ),
           ];
+
+          // Initialize the googlePinLocation
+          googlePinLocation = [
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ];
         });
+
         if (_isMapInitialized && _currentPosition != null) {
           _mapController.move(_currentPosition!, 15);
         }
@@ -77,20 +86,23 @@ class _MapDialogState extends State<MapDialog> {
     }
   }
 
-  void _onCameraTap() {
-    log("message");
-    if (_currentPosition != null) {
+  void _onPositionChanged(MapCamera position, bool hasGesture) {
+    if (hasGesture) {
       setState(() {
-        isCameraMoved = false;
-        googlePinLocation.clear();
-        googlePinLocation.addAll([
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
-        ]);
+        isCameraMoved = true;
+        _selectedPosition = position.center;
+
+        // Update googlePinLocation with the new center position
+        if (_selectedPosition != null) {
+          googlePinLocation = [
+            _selectedPosition!.latitude,
+            _selectedPosition!.longitude,
+          ];
+        }
       });
 
       log(
-        "CURRENT CENTER ????????????????????????????${_currentPosition!.latitude}   ${_currentPosition!.longitude}",
+        "MAP MOVED TO: ${position.center.latitude}, ${position.center.longitude}",
       );
     }
   }
@@ -120,18 +132,6 @@ class _MapDialogState extends State<MapDialog> {
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  // SizedBox(
-                  //   height: MediaQuery.of(context).size.width,
-                  //   child: GoogleMap(
-                  //     mapType: MapType.normal,
-                  //     initialCameraPosition: kGooglePlex,
-                  //     myLocationButtonEnabled: true,
-                  //     myLocationEnabled: true,
-                  //     onMapCreated: _onMapCreated,
-                  //     onCameraMove: _onCameraMove,
-                  //     onCameraIdle: _onCameraIdle,
-                  //   ),
-                  // ),
                   SizedBox(
                     height: MediaQuery.of(context).size.width,
                     child: FlutterMap(
@@ -142,8 +142,7 @@ class _MapDialogState extends State<MapDialog> {
                         onMapReady: () {
                           _onMapCreated(_mapController);
                         },
-                        onPositionChanged:
-                            (camera, hasGesture) => _onCameraTap(),
+                        onPositionChanged: _onPositionChanged,
                       ),
                       children: [
                         TileLayer(
@@ -177,16 +176,9 @@ class _MapDialogState extends State<MapDialog> {
               ),
               ExpandedFilledButton(
                 title: "Done",
-                // onTap: () {
-                //   // context
-                //   //     .read<AddKycBloc>()
-                //   //     .add(AddKycEvent.googleMapPinChanged(googlePinLocation));
-
-                //   Navigator.pop(context, currentCenter);
-                // },
                 onTap: () {
                   log(
-                    "GOOGLE PIN LOCATION ????????????????????????????${googlePinLocation.first}   ${googlePinLocation.last}",
+                    "SELECTED LOCATION: ${googlePinLocation.first}, ${googlePinLocation.last}",
                   );
                   widget.onDone(googlePinLocation);
                   Navigator.pop(context);
