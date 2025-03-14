@@ -196,14 +196,15 @@ class _MainMapScreenState extends State<MainMapScreen> {
           _endPoint!,
           _firebaseUnsafeAreas,
         );
-      } else {
-        // Use direct route if no unsafe areas
 
+        _showMessage('Showing safest route avoiding all danger areas');
+      } else {
         route = await _routeService.getRoute(_startPoint!, _endPoint!);
       }
 
       setState(() => _routePoints = route);
     } catch (e) {
+      log('Failed to calculate route: $e');
       _showError('Failed to calculate route: $e');
 
       // Fallback to direct route if avoiding unsafe areas fails
@@ -225,6 +226,12 @@ class _MainMapScreenState extends State<MainMapScreen> {
   void _showWarning(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.orange),
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
