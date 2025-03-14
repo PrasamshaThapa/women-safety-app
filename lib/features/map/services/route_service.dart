@@ -17,7 +17,6 @@ class RouteService {
     LatLng end,
     List<Map<String, dynamic>> unsafeAreas,
   ) async {
-    // Generate avoid areas string for OSRM
     String avoidAreasParam = generateAvoidAreasParameter(unsafeAreas);
 
     // Build URL with avoid areas
