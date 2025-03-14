@@ -7,3 +7,5 @@ class AuthUserChanged extends AuthEvent {
 
   AuthUserChanged(this.user);
 }
+
+class LoadUserFromPrefs extends AuthEvent {}

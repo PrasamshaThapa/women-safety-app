@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -6,6 +7,8 @@ import '../../bloc/auth/auth_state.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_constants.dart';
 import '../../utils/buttons/expanded_filled_button.dart';
+import '../../utils/toasts/custom_toasts.dart';
+import '../splash_screen.dart';
 import 'about_us_screen.dart';
 import 'incident_report_screen.dart';
 
@@ -14,6 +17,7 @@ class DrawerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth auth = FirebaseAuth.instance;
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final user = state.user;
@@ -88,7 +92,16 @@ class DrawerSection extends StatelessWidget {
 
                   const Spacer(),
 
-                  ExpandedFilledButton(title: "Logout", onTap: () {}),
+                  ExpandedFilledButton(
+                    title: "Logout",
+                    onTap: () {
+                      auth.signOut();
+                      CustomToasts.success("Logged Out");
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => SplashScreen()),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

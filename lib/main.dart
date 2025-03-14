@@ -14,6 +14,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  final authBloc = AuthBloc();
+  authBloc.add(LoadUserFromPrefs());
+
   runApp(const MyApp());
 }
 
