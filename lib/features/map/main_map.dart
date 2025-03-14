@@ -82,10 +82,7 @@ class _MainMapScreenState extends State<MainMapScreen> {
       setState(() {
         _currentPosition = position;
 
-        // If no incident location, use current as primary
-        if (_incidentPosition == null) {
-          _startPoint = position;
-        }
+        _startPoint = position;
       });
     } catch (e) {
       _showError('Could not get current location: $e');
@@ -98,6 +95,9 @@ class _MainMapScreenState extends State<MainMapScreen> {
     } catch (e) {
       _showError('Could not load contacts: $e');
     }
+
+    // Fetch unsafe areas
+    await _fetchUnsafeAreas();
 
     setState(() => _isLoading = false);
   }
@@ -186,7 +186,6 @@ class _MainMapScreenState extends State<MainMapScreen> {
 
     try {
       setState(() => _isLoading = true);
-      await _fetchUnsafeAreas();
 
       List<LatLng> route;
       if (_firebaseUnsafeAreas.isNotEmpty) {
@@ -320,6 +319,7 @@ class _MainMapScreenState extends State<MainMapScreen> {
             routePoints: _routePoints,
             isIncidentMarker: _incidentPosition != null,
             onMapTap: _handleMapTap,
+            unsafeAreas: _firebaseUnsafeAreas,
           ),
 
           // Loading Indicator

@@ -1,9 +1,13 @@
 // widgets/map_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/jam.dart';
+import 'package:iconify_flutter/icons/maki.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../constants/app_colors.dart';
+import '../../constants/app_constants.dart';
 
 class MapWidget extends StatefulWidget {
   final LatLng? currentPosition;
@@ -13,6 +17,7 @@ class MapWidget extends StatefulWidget {
   final List<LatLng> routePoints;
   final bool isIncidentMarker;
   final Function(LatLng) onMapTap;
+  final List<Map<String, dynamic>> unsafeAreas;
 
   const MapWidget({
     super.key,
@@ -23,6 +28,7 @@ class MapWidget extends StatefulWidget {
     this.routePoints = const [],
     this.isIncidentMarker = false,
     required this.onMapTap,
+    this.unsafeAreas = const [],
   });
 
   @override
@@ -115,10 +121,10 @@ class _MapWidgetState extends State<MapWidget> {
     if (widget.incidentPosition != null) {
       markers.add(
         Marker(
-          width: 50.0,
-          height: 50.0,
+          width: 40.0,
+          height: 40.0,
           point: widget.incidentPosition!,
-          child: Icon(Icons.warning, color: AppColors.danger, size: 30),
+          child: Iconify(Jam.triangle_danger_f, color: AppColors.danger),
         ),
       );
     }
@@ -130,7 +136,28 @@ class _MapWidgetState extends State<MapWidget> {
           width: 40.0,
           height: 40.0,
           point: widget.endPoint!,
-          child: const Icon(Icons.location_pin, color: Colors.red),
+          child: const Icon(Icons.location_pin, color: AppColors.success),
+        ),
+      );
+    }
+
+    // Unsafe areas markers
+    for (final area in widget.unsafeAreas) {
+      markers.add(
+        Marker(
+          width: 20,
+          height: 20,
+          point: LatLng(area['latitude'], area['longitude']),
+          child: Tooltip(
+            message: area['name'] ?? 'Unsafe Area',
+            // child: Icon(Icons.dangerous, color: AppColors.danger, size: 30),
+            child: Iconify(
+              Maki.danger,
+              color: AppColors.danger,
+
+              size: AppConstants.mediumIconSize,
+            ),
+          ),
         ),
       );
     }
